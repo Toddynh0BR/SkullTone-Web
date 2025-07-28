@@ -52,8 +52,8 @@
         // Baixar thumbnail
         const thumbRes = await fetch(`https://skulltone-back.onrender.com/thumbnail?url=${encodeURIComponent(url)}`);
         if (!thumbRes.ok) throw new Error("Erro ao buscar thumbnail");
-        const blob = await thumbRes.blob();
-        const thumbUrl = URL.createObjectURL(blob);
+
+        const thumbUrl = await thumbRes.data.thumbnail;
         document.getElementById('thumbnail').src = thumbUrl;
         document.getElementById('thumbnail').style.display = 'block';
         console.log("🖼️ Thumbnail carregada!");
