@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>YT MP3 & Thumbnail</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+    }
+
+    input {
+      width: 300px;
+      padding: 0.5rem;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      margin-left: 1rem;
+    }
+
+    img {
+      margin-top: 1rem;
+      max-width: 300px;
+      border: 1px solid #ccc;
+    }
+
+    audio {
+      margin-top: 1rem;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Baixar áudio e capa do YouTube</h1>
+  <input type="text" id="url" placeholder="Cole a URL do vídeo">
+  <button onclick="baixar()">Enviar</button>
+
+  <div id="resultado">
+    <img id="thumbnail" style="display:none;" />
+    <audio id="audio" controls style="display:none;"></audio>
+  </div>
+
+  <script>
+    async function baixar() {
+      const url = document.getElementById('url').value;
+      if (!url) return alert("Digite uma URL!");
+
+      console.log("▶️ Enviando URL:", url);
+
+      try {
+        // Baixar thumbnail
+        const thumbRes = await fetch(`http://localhost:3000/thumbnail?url=${encodeURIComponent(url)}`);
+        if (!thumbRes.ok) throw new Error("Erro ao buscar thumbnail");
+        const blob = await thumbRes.blob();
+        const thumbUrl = URL.createObjectURL(blob);
+        document.getElementById('thumbnail').src = thumbUrl;
+        document.getElementById('thumbnail').style.display = 'block';
+        console.log("🖼️ Thumbnail carregada!");
+
+        // Baixar áudio
+        const audioRes = await fetch("http://localhost:3000/download-audio", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url })
+        });
+
+        if (!audioRes.ok) throw new Error("Erro ao baixar áudio");
+        const audioBlob = await audioRes.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audioEl = document.getElementById("audio");
+        audioEl.src = audioUrl;
+        audioEl.style.display = "block";
+        console.log("🎵 Áudio carregado!");
+      } catch (err) {
+        console.error("❌ Erro:", err);
+        alert("Erro ao processar vídeo. Veja o console.");
+      }
+    }
+  </script>
+</body>
+</html>
