@@ -50,7 +50,7 @@
 
       try {
         // Baixar thumbnail
-        const thumbRes = await fetch(`http://localhost:3000/thumbnail?url=${encodeURIComponent(url)}`);
+        const thumbRes = await fetch(`https://skulltone-back.onrender.com/thumbnail?url=${encodeURIComponent(url)}`);
         if (!thumbRes.ok) throw new Error("Erro ao buscar thumbnail");
         const blob = await thumbRes.blob();
         const thumbUrl = URL.createObjectURL(blob);
@@ -59,7 +59,7 @@
         console.log("🖼️ Thumbnail carregada!");
 
         // Baixar áudio
-        const audioRes = await fetch("http://localhost:3000/download-audio", {
+        const audioRes = await fetch("https://skulltone-back.onrender.com/download-audio", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url })
