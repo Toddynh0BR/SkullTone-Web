@@ -37,33 +37,31 @@
   <ul id="resultsList"></ul>
 
   <script>
-    const CONSUMER_KEY = "7ee373d688a5287899fbb071c1c797c6"; // substitua com sua Consumer Key
-
     async function searchMusic() {
       const query = document.getElementById('searchInput').value;
       const resultsList = document.getElementById('resultsList');
       resultsList.innerHTML = "Carregando...";
 
       try {
-        const response = await fetch(`https://search.4shared.com/v1_2/files.json?q=${encodeURIComponent(query)}&consumer_key=${CONSUMER_KEY}`);
+        const response = await fetch(`https://skulltone-back.onrender.com/api/buscar?query=${encodeURIComponent(query)}`);
         const data = await response.json();
 
-        const musicFiles = data.files.filter(file =>
-          (file.name.endsWith(".mp3") || file.name.endsWith(".mp4")) &&
-          file.downloadUrl // tenta pegar arquivos com URL de download
-        );
+        if (data.error) {
+          resultsList.innerHTML = `<li>${data.error}</li>`;
+          return;
+        }
 
-        if (musicFiles.length === 0) {
-          resultsList.innerHTML = "<li>Nenhum arquivo baixável encontrado.</li>";
+        if (data.length === 0) {
+          resultsList.innerHTML = "<li>Nenhum arquivo encontrado.</li>";
           return;
         }
 
         resultsList.innerHTML = "";
-        musicFiles.forEach(file => {
+        data.forEach(file => {
           const li = document.createElement("li");
           li.innerHTML = `
             <strong>${file.name}</strong><br/>
-            <a href="${file.downloadUrl}" target="_blank">Baixar</a>
+            <a href="/api/download/${file.id}" target="_blank">Baixar</a>
           `;
           resultsList.appendChild(li);
         });
