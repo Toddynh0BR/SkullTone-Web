@@ -2,79 +2,73 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>YT MP3 & Thumbnail</title>
+  <title>Busca de Músicas no 4shared</title>
   <style>
     body {
-      font-family: sans-serif;
-      padding: 2rem;
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f4f4f4;
     }
-
-    input {
-      width: 300px;
-      padding: 0.5rem;
+    input, button {
+      padding: 10px;
+      font-size: 16px;
     }
-
-    button {
-      padding: 0.5rem 1rem;
-      margin-left: 1rem;
+    ul {
+      list-style: none;
+      padding: 0;
     }
-
-    img {
-      margin-top: 1rem;
-      max-width: 300px;
-      border: 1px solid #ccc;
+    li {
+      margin-bottom: 10px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 5px;
     }
-
-    audio {
-      margin-top: 1rem;
-      display: block;
+    a {
+      color: blue;
     }
   </style>
 </head>
 <body>
-  <h1>Baixar áudio e capa do YouTube</h1>
-  <input type="text" id="url" placeholder="Cole a URL do vídeo">
-  <button onclick="baixar()">Enviar</button>
 
-  <div id="resultado">
-    <img id="thumbnail" style="display:none;" />
-    <audio id="audio" controls style="display:none;"></audio>
-  </div>
+  <h1>Buscar Músicas no 4shared</h1>
+  <input id="searchInput" placeholder="Digite o nome da música" />
+  <button onclick="searchMusic()">Buscar</button>
+
+  <ul id="resultsList"></ul>
 
   <script>
-    async function baixar() {
-      const url = document.getElementById('url').value;
-      if (!url) return alert("Digite uma URL!");
+    const CONSUMER_KEY = "7ee373d688a5287899fbb071c1c797c6"; // substitua com sua Consumer Key
 
-      console.log("▶️ Enviando URL:", url);
+    async function searchMusic() {
+      const query = document.getElementById('searchInput').value;
+      const resultsList = document.getElementById('resultsList');
+      resultsList.innerHTML = "Carregando...";
 
       try {
-        // Baixar thumbnail
-        const thumbRes = await fetch(`https://skulltone-back.onrender.com/thumbnail?url=${encodeURIComponent(url)}`);
-        if (!thumbRes.ok) throw new Error("Erro ao buscar thumbnail");
+        const response = await fetch(`https://search.4shared.com/v1_2/files.json?q=${encodeURIComponent(query)}&consumer_key=${CONSUMER_KEY}`);
+        const data = await response.json();
 
-        const thumbUrl = await thumbRes.data.thumbnail;
-        document.getElementById('thumbnail').src = thumbUrl;
-        document.getElementById('thumbnail').style.display = 'block';
-        console.log("🖼️ Thumbnail carregada!");
+        const musicFiles = data.files.filter(file =>
+          (file.name.endsWith(".mp3") || file.name.endsWith(".mp4")) &&
+          file.downloadUrl // tenta pegar arquivos com URL de download
+        );
 
-        // Baixar áudio
-        const audioRes = await fetch("https://skulltone-back.onrender.com/download-audio", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url })
+        if (musicFiles.length === 0) {
+          resultsList.innerHTML = "<li>Nenhum arquivo baixável encontrado.</li>";
+          return;
+        }
+
+        resultsList.innerHTML = "";
+        musicFiles.forEach(file => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <strong>${file.name}</strong><br/>
+            <a href="${file.downloadUrl}" target="_blank">Baixar</a>
+          `;
+          resultsList.appendChild(li);
         });
-
-        if (!audioRes.ok) throw new Error("Erro ao baixar áudio");
-        const audioBlob = await audioRes.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audioEl = document.getElementById("audio");
-        audioEl.src = audioUrl;
-        audioEl.style.display = "block";
-        console.log("🎵 Áudio carregado!");
-      } catch (err) {
-        console.error("❌ Erro:", err);
-        alert("Erro ao processar vídeo. Veja o console.");
+      } catch (error) {
+        resultsList.innerHTML = `<li>Erro ao buscar músicas: ${error.message}</li>`;
       }
     }
   </script>
